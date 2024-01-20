@@ -1,0 +1,23 @@
+{
+  "name": "htm-ally",
+  "version": "0.0.6",
+  "source": "src/index.js",
+  "main": "./umd/htm-ally.umd.js",
+  "umd:main": "./umd/htm-ally.umd.js",
+  "module": "./dist/htm-ally.module.mjs",
+  "exports": "./dist/htm-ally.modern.mjs",
+  "scripts": {
+    "build": "microbundle -o dist/ -f esm,modern && microbundle -o umd/ -f umd",
+    "dev": "microbundle watch --no-compress"
+  },
+  "files": [
+    "src",
+    "umd",
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "microbundle": "^0.15.1"
+  }
+}
