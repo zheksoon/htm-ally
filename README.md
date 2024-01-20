@@ -57,19 +57,19 @@ const fragment = html`
 ```
 
 Just insert interpolation with an object to define attributes and event handlers.
-Other attributes on the element are preserved:
+Other attributes of the element are preserved:
 
 ```js
-const onClick = () => alert("clicked");
+const onclick = () => alert("clicked");
 
 const fragment = html`
-  <button id="button" ${{ onclick, onClick, class: "btn", disabled: false }}>
+  <button id="button" ${{ onclick, class: "btn", disabled: false }}>
     Click me
   </button>
 `;
 ```
 
-Classes can also be defined as array or object:
+Classes can also be defined as arrays or objects:
 
 ```js
 const primary = true;
@@ -82,7 +82,7 @@ const fragment = html`
 `;
 ```
 
-Styles are be defined as an object (with camelCase):
+Styles are defined as an object (with camelCase):
 
 ```js
 const fragment = html`
@@ -130,9 +130,11 @@ const Counter = (parent) => {
 document.getElementById("app").append(html`${Counter}`);
 ```
 
-For `mount` and `unmount` example, see the [Timer](#timer) example.
+For the `mount` and `unmount` hooks, see the [Timer](#timer) example.
 
-Components can have local state in a closure or on the parent node:
+Note: text input components cannot be updated with the `parent.update()` as the cursor position will be reset.
+
+Components can have a local state in a closure or on the parent node:
 
 ```js
 
@@ -152,8 +154,8 @@ const Counter = (initialValue) => {
 document.getElementById("app").append(html`${Counter(100)}`);
 ```
 
-The state isn't preserved when parent component updates (as there is no reconciliation), 
-so it's recommended to use global state to store states for each component.
+The state isn't preserved when the parent component updates (as there is no reconciliation), 
+so it's recommended to use a global state to store states for each component.
 
 ## Examples
 
@@ -255,7 +257,7 @@ const Timer = (parent) => {
     clearInterval(interval);
   };
 
-  return html` Timer: ${time}s `;
+  return html`Timer: ${time}s`;
 };
 
 document.getElementById("app").append(html`${TimerToggle}`);
