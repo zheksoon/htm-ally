@@ -49,17 +49,19 @@ export const html = (strings_, ...values) => {
 
     if (val === false || val == null) {
     } else if (typeof val == "function") {
-      el.update = () => {
-        let unmount = (el) => {
-          Array.from(el.children).forEach((child) => {
-            unmount(child);
-            child.unmount && child.unmount();
-          });
-        };
-        unmount(el);
-        el.replaceChildren(val(el));
-      };
-      el.update();
+      el.r = reaction(
+        (el.update = () => {
+          let unmount = (el) => {
+            Array.from(el.children).forEach((child) => {
+              unmount(child);
+              child.r && child.r();
+              child.unmount && child.unmount();
+            });
+          };
+          unmount(el);
+          el.replaceChildren(val(el));
+        })
+      );
       el.mount && el.mount();
     } else if (val instanceof Node || typeof val != "object") {
       el.replaceChildren(val);
@@ -91,4 +93,45 @@ export const html = (strings_, ...values) => {
   });
 
   return strings;
+};
+
+let subscriber;
+
+export const ref = (val) => {
+  const subs = new Set();
+
+  return {
+    get value() {
+      subscriber && subs.add(subscriber(subs));
+      return val;
+    },
+    set value(newVal) {
+      subs.forEach((sub) => sub());
+      val = newVal;
+    },
+  };
+};
+
+export const reaction = (body) => {
+  let reactionSubs = [];
+  let destroy = () => {
+    reactionSubs.forEach((subs) => {
+      subs.delete(exec);
+    });
+    reactionSubs = [];
+  };
+  let exec = () => {
+    destroy();
+    let old = subscriber;
+    subscriber = (subs) => {
+      reactionSubs.push(subs);
+      return exec;
+    };
+    body();
+    subscriber = old;
+  };
+
+  exec();
+
+  return destroy;
 };
