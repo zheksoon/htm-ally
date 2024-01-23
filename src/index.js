@@ -1,7 +1,7 @@
 let id = 0;
 
 let createClass = (obj) => {
-  if (typeof obj === "string") return obj;
+  if ("" + obj === obj) return obj;
 
   let out = "";
 
@@ -20,18 +20,19 @@ let createClass = (obj) => {
   return out;
 };
 
-export const html = (strings_, ...values) => {
+export const html = (s, ...values) => {
   let startId = id;
 
   values = values.map((obj) => (Array.isArray(obj) ? obj : [obj]));
 
-  let [out, ...strings] = [...strings_];
+  let [out, ...strings] = s;
 
   strings.forEach((str, idx) => {
     values[idx].forEach((val) => {
       let dataId = `data-id="${id++}"`;
 
-      if (val instanceof Node || typeof val != "object") {
+      // everything except plain objects creates a slot
+      if (!val || Object.getPrototypeOf(val) !== Object.prototype) {
         dataId = `<slot ${dataId}></slot>`;
       }
 
@@ -61,7 +62,7 @@ export const html = (strings_, ...values) => {
       };
       el.update();
       el.mount && el.mount();
-    } else if (val instanceof Node || typeof val != "object") {
+    } else if (Object.getPrototypeOf(val) !== Object.prototype) {
       el.replaceChildren(val);
     } else {
       for (let prop in val) {
@@ -71,7 +72,7 @@ export const html = (strings_, ...values) => {
           value = createClass(value);
         }
 
-        if (prop[0] == "o" && prop[1] == "n") {
+        if (prop.slice(0, 2) == "on") {
           el.addEventListener(prop.slice(2), value);
         } else if (prop == "style") {
           for (let key in value) {
