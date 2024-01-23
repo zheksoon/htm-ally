@@ -1,12 +1,14 @@
-# htm-ally
+# htm-ally ![brotli size](https://flat-badgen.vercel.app/badgesize/brotli/https:/unpkg.com/htm-ally/dist/htm-ally.modern.mjs)
 
 **500 bytes** HTML templates with a syntax you already know
 
 - Just HTML, nothing new to learn
+- No need for transpiler or compiler
 - Components, mount, unmount, and update hooks
 - Element refs, event handlers, attributes, and styles
 - Class helper
 - Fragments and arrays
+- XSS safe
 
 ## Install
 
