@@ -161,6 +161,8 @@ so it's recommended to use a global state to store states for each component.
 
 ## Examples
 
+All examples can be found in the CodeSandbox: [link](https://codesandbox.io/p/sandbox/htm-ally-examples-tws6cm)
+
 ### Counter
 
 Shows event handlers, attributes, component update
@@ -198,26 +200,28 @@ Shows ref usage, array map, and component update.
 ```js
 let todos = [];
 
-const TodoList = (parent) => {
+const TodoList = () => {
   let inputRef = (el) => (inputRef.el = el);
 
-  const addTodo = () => {
-    const text = inputRef.el.value;
-    inputRef.el.value = "";
-    todos.push(text);
-    parent.update();
-  };
+  return (parent) => {
+    const addTodo = () => {
+      const text = inputRef.el.value;
+      inputRef.el.value = "";
+      todos.push(text);
+      parent.update();
+    };
 
-  return html`
-    <input type="text" ${{ ref: inputRef }} />
-    <button ${{ onclick: addTodo }}>Add</button>
-    <ul>
-      ${todos.map((text) => html`<li>${text}</li>`)}
-    </ul>
-  `;
+    return html`
+      <input type="text" ${{ ref: inputRef }} />
+      <button ${{ onclick: addTodo }}>Add</button>
+      <ul>
+        ${todos.map((text) => html`<li>${text}</li>`)}
+      </ul>
+    `;
+  };
 };
 
-document.getElementById("app").append(html`${TodoList}`);
+document.getElementById("app").append(html`${TodoList()}`);
 ```
 
 ### Timer
@@ -264,6 +268,10 @@ const Timer = (parent) => {
 
 document.getElementById("app").append(html`${TimerToggle}`);
 ```
+
+### Advanced Todo list
+
+See the [CodeSanbox](https://codesandbox.io/p/sandbox/htm-ally-examples-tws6cm?file=%2Fsrc%2F4-todo-list-advanced.ts%3A86%2C18)
 
 ## Author
 
