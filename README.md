@@ -1,6 +1,6 @@
 # htm-ally ![brotli size](https://flat-badgen.vercel.app/badgesize/brotli/https:/unpkg.com/htm-ally/dist/htm-ally.modern.mjs)
 
-**500 bytes** full-featured micro-framework with a syntax you already know
+**500 bytes** web app micro-framework with a syntax you already know
 
 - Just HTML, nothing new to learn
 - No need for transpiler or compiler
