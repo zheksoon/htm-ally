@@ -50,17 +50,17 @@ export const html = (s, ...values) => {
 
     if (val === false || val == null) {
     } else if (typeof val == "function") {
-      el.update = () => {
+      el.r = reaction(() => {
         let unmount = (el) => {
           Array.from(el.children).forEach((child) => {
             unmount(child);
+            child.r && child.r();
             child.unmount && child.unmount();
           });
         };
         unmount(el);
         el.replaceChildren(val(el));
-      };
-      el.update();
+      });
       el.mount && el.mount();
     } else if (Object.getPrototypeOf(val) !== Object.prototype) {
       el.replaceChildren(val);
@@ -68,28 +68,128 @@ export const html = (s, ...values) => {
       for (let prop in val) {
         let value = val[prop];
 
-        if (prop == "class") {
-          value = createClass(value);
-        }
-
         if (prop.slice(0, 2) == "on") {
           el.addEventListener(prop.slice(2), value);
-        } else if (prop == "style") {
-          for (let key in value) {
-            if (key[0] == "-") {
-              el[prop].setProperty(key, value[key]);
-            } else {
-              el[prop][key] = value[key];
-            }
-          }
         } else if (prop == "ref") {
           value(el);
         } else {
-          value === false || value == null || el.setAttribute(prop, value);
+          el.r = reaction(() => {
+            let newValue = typeof value == "function" ? value() : value;
+
+            if (prop == "style") {
+              el[prop].cssText = "";
+
+              for (let key in newValue) {
+                if (key[0] == "-") {
+                  el[prop].setProperty(key, newValue[key]);
+                } else {
+                  el[prop][key] = newValue[key];
+                }
+              }
+            } else {
+              if (prop == "class") {
+                newValue = createClass(newValue);
+              }
+
+              el.removeAttribute(prop);
+
+              newValue === false ||
+                newValue == null ||
+                el.setAttribute(prop, newValue);
+            }
+          });
         }
       }
     }
   });
 
   return strings;
+};
+
+let subscriber;
+let cache = new WeakMap();
+let unwrapMap = new WeakMap();
+let queue = new Set();
+
+const schedule = (fn) => {
+  !queue.size &&
+    Promise.resolve().then(() => {
+      queue.forEach((fn) => fn());
+      queue.clear();
+    });
+
+  queue.add(fn);
+};
+
+export const createStore = (state) => {
+  if (Object(state) !== state) return state;
+
+  state = unwrapMap.get(state) || state;
+
+  let p = cache.get(state);
+  if (p) return p;
+
+  let m = new Map();
+
+  p = new Proxy(state, {
+    get(target, prop) {
+      let value = target[prop];
+
+      if (prop === "prototype" || typeof value === "function") {
+        return value;
+      }
+
+      if (subscriber) {
+        let subs = m.get(prop) || new Set();
+        m.set(prop, subs.add(subscriber(subs)));
+      }
+
+      return createStore(value);
+    },
+    set(target, prop, value) {
+      if (Array.isArray(target) && prop === "length") {
+        let key = value;
+        while (key < target.length) {
+          m.delete("" + key++);
+        }
+      }
+
+      target[prop] = createStore(value);
+      let subs = m.get(prop);
+      subs && subs.forEach((sub) => schedule(sub));
+      return true;
+    },
+    deleteProperty(target, prop) {
+      m.delete(prop);
+      delete target[prop];
+      return true;
+    },
+  });
+
+  cache.set(state, p);
+  unwrapMap.set(p, state);
+
+  return p;
+};
+
+const reaction = (body) => {
+  let subscriptions = [];
+  let destroy = () => {
+    subscriptions.forEach((subs) => {
+      subs.delete(run);
+    });
+    subscriptions = [];
+  };
+  let run = () => {
+    destroy();
+    let old = subscriber;
+    subscriber = (subs) => {
+      subscriptions.push(subs);
+      return run;
+    };
+    body();
+    subscriber = old;
+  };
+  run();
+  return destroy;
 };
