@@ -23,16 +23,14 @@ let createClass = (obj) => {
 export const html = (s, ...values) => {
   let startId = id;
 
-  values = values.map((obj) => (Array.isArray(obj) ? obj : [obj]));
-
   let [out, ...strings] = s;
 
   strings.forEach((str, idx) => {
-    values[idx].forEach((val) => {
-      let dataId = `data-id="${id++}"`;
+    [values[idx]].flat().forEach((val) => {
+      let dataId = `slot-id="${id++}"`;
 
       // everything except plain objects creates a slot
-      if (!val || Object.getPrototypeOf(val) !== Object.prototype) {
+      if (!val || val.constructor != Object) {
         dataId = `<slot ${dataId}></slot>`;
       }
 
@@ -46,13 +44,13 @@ export const html = (s, ...values) => {
   strings = strings.content;
 
   values.flat().forEach((val) => {
-    let el = strings.querySelector(`[data-id="${startId++}"]`);
+    let el = strings.querySelector(`[slot-id="${startId++}"]`);
 
     if (val === false || val == null) {
     } else if (typeof val == "function") {
       el.update = () => {
         let unmount = (el) => {
-          Array.from(el.children).forEach((child) => {
+          el.childList.forEach((child) => {
             unmount(child);
             child.unmount && child.unmount();
           });
@@ -62,7 +60,7 @@ export const html = (s, ...values) => {
       };
       el.update();
       el.mount && el.mount();
-    } else if (Object.getPrototypeOf(val) !== Object.prototype) {
+    } else if (val.constructor != Object) {
       el.replaceChildren(val);
     } else {
       for (let prop in val) {
@@ -72,8 +70,8 @@ export const html = (s, ...values) => {
           value = createClass(value);
         }
 
-        if (prop.slice(0, 2) == "on") {
-          el.addEventListener(prop.slice(2), value);
+        if (prop == "ref") {
+          value(el);
         } else if (prop == "style") {
           for (let key in value) {
             if (key[0] == "-") {
@@ -82,8 +80,8 @@ export const html = (s, ...values) => {
               el[prop][key] = value[key];
             }
           }
-        } else if (prop == "ref") {
-          value(el);
+        } else if (prop.slice(0, 2) == "on") {
+          el.addEventListener(prop.slice(2), value);
         } else {
           value === false || value == null || el.setAttribute(prop, value);
         }
